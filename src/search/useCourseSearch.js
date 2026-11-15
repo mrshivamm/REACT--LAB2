@@ -12,9 +12,53 @@
 //     dependency array right.
 //   - Only the LATEST query's answer may reach the screen. Use an `ignore` flag that the
 //     effect's cleanup sets to true (JS Lab 2 §09: the same idea as track()).
+
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client.js";
 
 export function useCourseSearch(query) {
-  throw new Error("TODO");
+  const trimmedQuery = query.trim();
+
+  const [results, setResults] = useState([]);
+  const [status, setStatus] = useState("idle");
+
+  useEffect(() => {
+    let ignore = false;
+
+    if (trimmedQuery === "") {
+      setResults([]);
+      setStatus("idle");
+
+      return () => {
+        ignore = true;
+      };
+    }
+
+    setStatus("loading");
+    setResults([]);
+
+    const params = new URLSearchParams({
+      q: trimmedQuery,
+    });
+
+    apiFetch(`/api/courses?${params.toString()}`)
+      .then(data => {
+        if (ignore) return;
+
+        setResults(data);
+        setStatus("ready");
+      })
+      .catch(() => {
+        if (ignore) return;
+
+        setResults([]);
+        setStatus("error");
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [trimmedQuery]);
+
+  return { results, status };
 }
