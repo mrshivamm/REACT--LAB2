@@ -6,11 +6,36 @@
 //     its value comes from state (query), and onChange puts what was typed into that state.
 //   - useCourseSearch(query) does the fetching; SearchResults shows the outcome.
 // This component owns the query (nobody else needs it) and nothing else.
+
+
 import { useState } from "react";
 import { useCourseSearch } from "./useCourseSearch.js";
 import { SearchResults } from "./SearchResults.jsx";
+import { useDebounced } from "./useDebounced.js";
 
 export function CourseSearch() {
-  // Replace this line with the search box (pre-lab section 06).
-  return <p className="todo">The course search goes here — pre-lab section 06.</p>;
+  const [query, setQuery] = useState("");
+
+  // Wait until the user stops typing for 250 ms.
+  const debouncedQuery = useDebounced(query, 250);
+
+  // Search using the settled value, NOT the original query.
+  const { results, status } = useCourseSearch(debouncedQuery);
+
+  return (
+    <section>
+      <h2>Search the catalogue</h2>
+
+      <label htmlFor="course-search">Search courses</label>
+      <input
+        id="course-search"
+        type="search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+      />
+
+      <SearchResults results={results} status={status} />
+    </section>
+  );
 }
+
